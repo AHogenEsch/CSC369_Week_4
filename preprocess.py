@@ -50,20 +50,38 @@ def preprocess():
         pl.col("pixel_color").replace(COLOR_MAP).fill_null("unknown").alias("color_name")
     )
 
-    # --- Coordinates ---
-    # Remove commas and convert to single integer "raw_index"
+    # --- Coordinates --- REVISED WEEK 4
+    # Add a temporary column to identify the coordinate count (2 for normal operation, 4 for moderator actions)
     q = q.with_columns(
-        pl.col("coordinate")
-        .str.replace_all(",", "")
-        .cast(pl.Int32, strict=False)
-        .alias("raw_index")
+        pl.col("coordinate").str.split(",").alias("coords_list")
+    ).with_columns(
+        pl.col("coords_list").list.len().alias("c_count")
     )
 
-    # Derive X and Y from the raw_index
-    q = q.with_columns([
-        (pl.col("raw_index") % RPLACE_WIDTH).cast(pl.Int16).alias("x"),
-        (pl.col("raw_index") // RPLACE_WIDTH).cast(pl.Int16).alias("y")
+    # Process Standard Pixels (normal users)
+    standard_pixels = q.filter(pl.col("c_count") == 2).with_columns([
+        pl.col("coords_list").list.get(0).cast(pl.Int16).alias("x"),
+        pl.col("coords_list").list.get(1).cast(pl.Int16).alias("y")
     ])
+
+    # Process Moderator Rectangles to create individual pixel placements
+    # This creates 102,275 additional rows from 19 moderator rectangles.
+    mod_pixels = q.filter(pl.col("c_count") == 4).with_columns([
+        pl.col("coords_list").list.get(0).cast(pl.Int32).alias("x1"),
+        pl.col("coords_list").list.get(1).cast(pl.Int32).alias("y1"),
+        pl.col("coords_list").list.get(2).cast(pl.Int32).alias("x2"),
+        pl.col("coords_list").list.get(3).cast(pl.Int32).alias("y2")
+    ]).with_columns([
+        pl.int_ranges(pl.col("x1"), pl.col("x2") + 1).alias("x_range"),
+        pl.int_ranges(pl.col("y1"), pl.col("y2") + 1).alias("y_range")
+    ]).explode("x_range").explode("y_range").select([
+        pl.all().exclude(["x1", "y1", "x2", "y2", "x_range", "y_range"]),
+        pl.col("x_range").cast(pl.Int16).alias("x"),
+        pl.col("y_range").cast(pl.Int16).alias("y")
+    ])
+
+    # Merge: Vertical concatenation back into one stream
+    q = pl.concat([standard_pixels, mod_pixels]).drop(["coords_list", "c_count"])
 
     # --- Final Selection & Optimization ---
     q = q.select([
