@@ -8,7 +8,7 @@ def analyze_moderation_actions(file_path=DATA_FILE_PATH):
     start_time = time.perf_counter()
 
     try:
-        # We scan the CSV. Note: Polars handles quoted fields with commas 
+        # Scan the CSV. Note: Polars handles quoted fields with commas 
         # automatically, but we want to look inside that specific string.
         lf = pl.scan_csv(file_path)
 
@@ -16,8 +16,6 @@ def analyze_moderation_actions(file_path=DATA_FILE_PATH):
         # Logic: Count commas in the 'coordinate' string. 
         # A normal pixel is "x,y" (1 comma). 
         # A moderator rectangle is "x1,y1,x2,y2" (3 commas).
-        # You requested "at least 4 commas" (which would be 5+ values), 
-        # but typical mod actions have 3 commas. I will use >= 3 to be safe.
         analysis = (
             lf.select([
                 pl.all(),
@@ -75,10 +73,9 @@ def analyze_coordinate_commas(file_path=DATA_FILE_PATH):
     start_time = time.perf_counter()
 
     try:
-        # scan_csv allows us to process the large file without crashing your RAM
         lf = pl.scan_csv(file_path)
 
-        # We create a temporary column that counts the commas for every single row
+        # Create a temporary column that counts the commas for every single row
         analysis = lf.select([
             pl.len().alias("total_rows"),
             # Count occurrences of 0, 1, 2, and 3 commas strictly
@@ -95,7 +92,7 @@ def analyze_coordinate_commas(file_path=DATA_FILE_PATH):
             percentage = (count / total * 100) if total > 0 else 0
             print(f"{label:15} {count:12,} rows ({percentage:6.2f}%)")
 
-        # Get one real example for each category to help you visualize what Excel is hiding
+        # Get one real example for each category to help  visualize what Excel is hiding
         examples = {}
         for i in range(4):
             ex = lf.filter(pl.col("coordinate").str.count_matches(",").eq(i)).select("coordinate").limit(1).collect()

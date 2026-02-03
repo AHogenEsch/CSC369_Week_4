@@ -30,7 +30,7 @@ def get_snapshot_at_time(target_time_str):
 
     # Parse Target Timestamp
     try:
-        # We append " UTC" to match the CSV format if it's missing
+        # Append " UTC" to match the CSV format if it's missing
         if "UTC" not in target_time_str:
             target_time_str += " UTC"
     except Exception:
@@ -41,7 +41,7 @@ def get_snapshot_at_time(target_time_str):
     lf = pl.scan_csv(DATA_FILE_PATH)
     
     # Filter: Keep only rows BEFORE the target time
-    # Note: We do string comparison on the timestamp column. 
+    # Note: Do string comparison on the timestamp column. 
     # For 'YYYY-MM-DD...' format, lexicographical sort works perfectly and is faster than parsing dates.
     filtered = lf.filter(pl.col("timestamp") <= target_time_str)
 
@@ -78,10 +78,10 @@ def get_snapshot_at_time(target_time_str):
     combined = pl.concat([std, mod])
 
     # Aggregation: Get HEIGHT and FINAL COLOR per pixel
-    # We maintain order so the "last" color in the CSV is the visible color
+    # Maintain order so the "last" color in the CSV is the visible color
     print("  > Aggregating pixel history...")
     
-    # We collect first to utilize Polars' efficient group_by context
+    # Collect first to utilize Polars' efficient group_by context
     # Aggregation Strategy:
     # 1. Height = count()
     # 2. Visible Color = last()

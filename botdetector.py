@@ -102,27 +102,6 @@ def detect_bots(file_path=DATA_FILE_PATH):
             .collect()
         )
 
-        # Find coordinated users, high volume of localized placements in short period of time
-        # Logic: Identify "Attack Seconds" where global volume > 3 Standard Deviations above mean.
-        # Then count unique users present in those seconds.
-        
-        # # 1. Calc stats on the lazy frame
-        # global_activity = df_window.group_by("seconds_since_start").agg(p2.len().alias("p_sec"))
-        # stats = global_activity.select([
-        #     p2.col("p_sec").mean().alias("mean_val"), 
-        #     p2.col("p_sec").std().alias("std_val")
-        # ]).collect()
-        
-        # # Robust check for empty stats to prevent NoneType errors
-        # if stats.height > 0 and stats[0, 0] is not None:
-        #     threshold = stats[0, 0] + (3 * stats[0, 1])
-        #     botnet_users = (
-        #         df_window.join(global_activity.filter(p2.col("p_sec") > threshold), on="seconds_since_start")
-        #         .select(p2.col("user_id_int").unique())
-        #         .collect()
-        #     )
-        # else:
-        #     botnet_users = p2.DataFrame({"user_id_int": []})
 
         execution_time_ms = (time.perf_counter_ns() - start_perf) // 1_000_000
 
@@ -132,7 +111,6 @@ def detect_bots(file_path=DATA_FILE_PATH):
         print(f"Number of users with strictly linear placements: {linear_placement.height}")
         print(f"Number of users who placed pixels in few coordinates: {low_coordinate_deviation.height}")
         print(f"Number of users who only placed a single color: {mono_chromatic.height}")
-        # print(f"Number of users who were part of large coordinated efforts: {botnet_users.height}")
         print(f"Execution Time: {execution_time_ms} ms")
 
     except Exception as e:
