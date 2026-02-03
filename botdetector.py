@@ -55,7 +55,7 @@ def detect_bots(file_path=DATA_FILE_PATH):
             .group_by(["user_id_int", "streak_id"])
             .agg(p2.len().alias("streak_length"))
             # 4. Filter for users who have ANY streak >= 24
-            .filter(p2.col("streak_length") >= 32)
+            .filter(p2.col("streak_length") >= 24)
             .select("user_id_int")
             .unique()
             .collect()
@@ -89,7 +89,7 @@ def detect_bots(file_path=DATA_FILE_PATH):
                 (p2.col("x").max() - p2.col("x").min()).alias("x_range"),
                 (p2.col("y").max() - p2.col("y").min()).alias("y_range")
             ])
-            .filter((p2.col("x_range") <= 1) & (p2.col("y_range") <= 1))
+            .filter((p2.col("x_range") <= 3) & (p2.col("y_range") <= 3))
             .collect()
         )
 
