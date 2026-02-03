@@ -10,7 +10,7 @@ RPLACE_HEIGHT = 2000
 
 # CONFIGURATION
 # Percentile for defining a "Hot Zone" on the canvas (Higher = stricter/smaller zones)
-ZONE_PERCENTILE = 0.99 
+ZONE_PERCENTILE = 0.97 
 # Minimum pixels placed in ONE SECOND in ONE ZONE to trigger a detection
 DENSITY_THRESHOLD = 50
 # If an attack pauses for this many seconds, the next wave is considered a NEW event
@@ -125,7 +125,7 @@ def detect_coordinated_botnets(file_path=DATA_FILE_PATH):
                 pl.len().alias("active_seconds")
             ])
             .sort("total_pixels", descending=True)
-            .limit(10) # Show Top 5 distinct attacks
+            .limit(10) # Show Top distinct attacks
         )
 
         # Calculate Total Unique Users across ALL detected bursts
@@ -143,7 +143,7 @@ def detect_coordinated_botnets(file_path=DATA_FILE_PATH):
         print(f"  Distinct Attack Bursts:  {coordinated_events['unique_event_id'].n_unique():,}")
         print(f"  Processing Time:         {exec_time} ms")
         print(f"-"*60)
-        print(f"TOP 5 COORDINATED ATTACK EVENTS:")
+        print(f"TOP 10 COORDINATED ATTACK EVENTS:")
         
         for i, row in enumerate(top_events.rows(named=True), 1):
             z_id = row['zone_id']

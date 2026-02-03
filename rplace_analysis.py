@@ -30,11 +30,13 @@ def analyze_moderation_actions(file_path=DATA_FILE_PATH):
         # We execute two paths: one for the full count, one for the mod subset
         results = analysis.select([
             pl.len().alias("total_rows"),
-            pl.col("is_mod_action").sum().alias("mod_count")
+            pl.col("is_mod_action").sum().alias("mod_count"),
+            pl.col("user_id").filter(pl.col("is_mod_action")).n_unique().alias("unique_mod_users")
         ]).collect()
 
         total_rows = results["total_rows"][0]
         mod_count = results["mod_count"][0]
+        unique_mod_users = results["unique_mod_users"][0]
 
         # 3. Get 10 examples of moderation coordinates
         examples = (
@@ -54,6 +56,7 @@ def analyze_moderation_actions(file_path=DATA_FILE_PATH):
         print("="*40)
         print(f"Total Rows Processed:      {total_rows:,}")
         print(f"Total Moderation Actions:  {mod_count:,}")
+        print(f"Unique Admins/Mods:        {unique_mod_users:,}") # Added this line
         print(f"Percentage of Total:       {percentage:.6f}%")
         print(f"Execution Time:            {execution_time:.2f} seconds")
         
